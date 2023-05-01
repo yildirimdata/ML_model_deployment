@@ -1,0 +1,35 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2708
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica-Bold;\f1\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red18\green19\blue24;\red255\green255\blue255;}
+{\*\expandedcolortbl;;\cssrgb\c8627\c9804\c12157;\cssrgb\c100000\c100000\c100000;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\b\fs24 \cf0 EC2 instance olusturma adimlar:
+\f1\b0 \
+\
+- userdan gir\
+- launch an instance\
+- tag ismi ver\
+- asagida os- operati\uc0\u305 n system sec (amazon linux)\
+- instance type sec (t2.micro decam edebiliriz)\
+- altinda key pair name var. Burdan da olu\uc0\u351 turabiliriz. 
+\fs28 \cf2 \cb3 \expnd0\expndtw0\kerning0
+Key pairs allow you to connect to your instance securely. (Network security kismindan da yapilailiyor bu)\
+	- create key pair\
+	- enter key pair name\
+	- type ve file format default kalabilir\
+	- .pem uzant\uc0\u305 l\u305  keypair dosyas\u305  download eder. (Extensions .pem degilse rename ile .pem yap\u305 labilir). Terminalde kulla\u305 lacak bu, bu nedenle terminal ilk acildigi nokta olan user directorysine alarak ekstra islemleri ignore ederiz.\
+- sonraki adim network settings. Create sec group tikli kals\uc0\u305 n - Allow ssh and allow http  t\u305 klanacak.
+\fs24 \cf0 \cb1 \kerning1\expnd0\expndtw0 \
+
+\fs28 \cf2 \cb3 \expnd0\expndtw0\kerning0
+- alttaki configure storage - default kalabilir. Tercih halinde miktar art\uc0\u305 r\u305 labilir.\
+- en alttaki advanced details simdilik default kalabilir.\
+- son olarak en alt sagda launch an instance. Otomatik succesfully initiated cikacak - id nosuna t\uc0\u305 klayarak instance sayfas\u305 na otomatik gecebiliriz. \
+- status initialising, arada refresh yaparak active olmas\uc0\u305 n\u305  bekleyece\u287 iz.\
+\
+- instance isminin yanindaki boxa t\uc0\u305 klay\u305 p yukardan connecte t\u305 klayarak ba\u287 lanma y\'f6ntemlerini a\'e7ar\u305 z. Altta 4 farkl\u305  ba\u287 lanma y\'f6ntemi \'e7\u305 kacak. EC2 instance connects t\u305 klay\u305 nca yeni bir konsol a\'e7\u305 lacak, sanal bir makina olu\u351 turmu\u351  olduk boylece.\
+\
+\'97 ssh client kismindan chmod command clip termianlde calistiralim\
+- sora en alttaki example coding copy paste calistirip izin sorunca yes.}
