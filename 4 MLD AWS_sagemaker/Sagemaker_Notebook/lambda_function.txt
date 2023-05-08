@@ -1,0 +1,41 @@
+import boto3
+import math
+import dateutil
+import json
+import os
+
+
+# grab environment variables
+ENDPOINT_NAME = os.environ['ENDPOINT_NAME']
+runtime= boto3.client('runtime.sagemaker')
+
+
+
+def lambda_handler(event, context):
+    
+    
+    data = json.loads(json.dumps(event))
+    payload = data['data']
+    print(payload)
+    
+    response = runtime.invoke_endpoint(EndpointName=ENDPOINT_NAME,
+                                       ContentType='text/csv',
+                                       Body=payload)
+    
+    result = response['Body'].read()
+    
+    
+    return result
+            
+
+----------------------------------------------------
+
+
+
+event- jason file
+
+{
+  "data": "0.0,0.0,2.0,141.0,80000.0"
+}
+            
+            

@@ -1,0 +1,425 @@
+create notebook instance
+New execution role
+select All S3
+open jupyter
+
+
+import libraries
+change bucket name to your own bucket name
+write-to_s3 uploads the files to s3
+check s3 
+Session provides credentials and region
+training
+get execution role 
+you may see under IAM roles
+sagemaker.image_uris.retrieve function bring us the xgboost
+
+
+build model:
+same as how you build in ml lessons
+selecting a model, defining hyperparameters
+additionally set instance type, count etc
+specify training location as data channels
+
+train the model:
+check training jobs 
+see RMSE for train, validation
+after complete
+check training jobs as completed
+see output file in S3
+model is ready to deploy
+
+deploy model:inference
+see model, endpoint configuration(created automatically)
+see enpoint creating and in service by refreshing
+
+run predictions
+serializers for data to be the same as model,
+--------------------------------------------------------------------
+
+CREATE POLICY
+
+go to IAM service
+click policies 
+create Policy
+
+go to json tab
+paste the following json code 
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "sagemaker:DescribeTrainingJob",
+                "sagemaker:DescribeLabelingJob",
+                "sagemaker:DescribeDataQualityJobDefinition",
+                "sagemaker:DescribeModelPackage",
+                "sagemaker:Search",
+                "sagemaker:DescribeModelPackageGroup",
+                "sagemaker:DescribeApp",
+                "sagemaker:GetRecord",
+                "sagemaker:DescribeFlowDefinition",
+                "sagemaker:DescribeAlgorithm",
+                "sagemaker:GetLineageGroupPolicy",
+                "sagemaker:DescribeTransformJob",
+                "sagemaker:DescribeInferenceRecommendationsJob",
+                "sagemaker:DescribeHumanLoop",
+                "sagemaker:BatchDescribeModelPackage",
+                "sagemaker:DescribeAction",
+                "sagemaker:DescribeDeviceFleet",
+                "sagemaker:DescribeSubscribedWorkteam",
+                "sagemaker:DescribeHyperParameterTuningJob",
+                "sagemaker:DescribeAutoMLJob",
+                "sagemaker:DescribeWorkforce",
+                "sagemaker:DescribeProcessingJob",
+                "sagemaker:GetDeviceFleetReport",
+                "sagemaker:DescribeEndpointConfig",
+                "sagemaker:DescribeStudioLifecycleConfig",
+                "sagemaker:RenderUiTemplate",
+                "sagemaker:DescribeImageVersion",
+                "sagemaker:BatchGetRecord",
+                "sagemaker:DescribeHumanTaskUi",
+                "sagemaker:GetDeviceRegistration",
+                "sagemaker:DescribeProject",
+                "sagemaker:GetSagemakerServicecatalogPortfolioStatus",
+                "sagemaker:DescribeNotebookInstance",
+                "sagemaker:DescribeAppImageConfig",
+                "sagemaker:DescribeLineageGroup",
+                "sagemaker:DescribeNotebookInstanceLifecycleConfig",
+                "sagemaker:DescribeTrial",
+                "sagemaker:DescribeContext",
+                "sagemaker:DescribeModelExplainabilityJobDefinition",
+                "sagemaker:DescribeEndpoint",
+                "sagemaker:DescribeUserProfile",
+                "sagemaker:InvokeEndpoint",
+                "sagemaker:DescribeMonitoringSchedule",
+                "sagemaker:DescribeEdgePackagingJob",
+                "sagemaker:DescribeFeatureGroup",
+                "sagemaker:DescribeModelQualityJobDefinition",
+                "sagemaker:GetModelPackageGroupPolicy",
+                "sagemaker:DescribeModel",
+                "sagemaker:DescribePipeline",
+                "sagemaker:DescribeArtifact",
+                "sagemaker:DescribePipelineExecution",
+                "sagemaker:DescribeWorkteam",
+                "sagemaker:DescribeModelBiasJobDefinition",
+                "sagemaker:DescribeCompilationJob",
+                "sagemaker:BatchGetMetrics",
+                "sagemaker:GetSearchSuggestions",
+                "sagemaker:DescribeExperiment",
+                "sagemaker:DescribeImage",
+                "sagemaker:DescribeDomain",
+                "sagemaker:DescribeCodeRepository",
+                "sagemaker:InvokeEndpointAsync",
+                "sagemaker:DescribePipelineDefinitionForExecution",
+                "sagemaker:DescribeTrialComponent",
+                "sagemaker:DescribeDevice"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+
+
+go to name by next
+write SageMakerInvokeEndPoint (defaming istedigin, karismamasi icin )
+create policy
+
+-------------------------------------------------------------------------
+CREATE ROLE
+
+click ROLES
+
+click CREATE ROLE
+
+AWS SERVICE is selected as default
+under AWS SERVICE "use case" select LAMBDA
+click next
+See ADD PERMISSIONS
+search SageMakerInvokeEndPoint (hit enter)
+select, click checkbox
+clear search by clicking X
+search for AWSLambdaBasicExecutionRole   #maybe need to go to last page (page 7)
+select the one with orange box, click checkbox
+click NEXT
+write ROLE NAME "lambda-your-name-role"
+see permissions we assigned
+
+click  CREATE ROLE
+see role created
+
+-----------------------------------------------------------------
+
+CREATE LAMBDA FUNCTION
+
+write lambda in the search bar
+under SERVICES search LAMBDA
+select the star next to it
+left CLICK open link in new tab
+
+CLICK CREATE FUNCTION on upper-right
+
+WRITE function name  "lambda-your-name"
+Select Python for RUNTIME
+under PERMISSIONS 
+CLICK "Change default execution role"
+SELECT Use an existing role
+click the space opened
+SELECT lambda-your-name-role
+CLICK create function on bottom-right
+
+Copy notebook below
+*******************************
+# Reference:
+# https://aws.amazon.com/blogs/machine-learning/call-an-amazon-sagemaker-model-endpoint-using-amazon-api-gateway-and-aws-lambda/
+# https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-output-format
+
+import boto3
+import math
+import dateutil
+import json
+import os
+
+
+# grab environment variables
+ENDPOINT_NAME = os.environ['ENDPOINT_NAME']
+runtime= boto3.client('runtime.sagemaker')
+
+
+
+def lambda_handler(event, context):
+    
+    
+    data = json.loads(json.dumps(event))
+    payload = data['data']
+    print(payload)
+    
+    response = runtime.invoke_endpoint(EndpointName=ENDPOINT_NAME,
+                                       ContentType='text/csv',
+                                       Body=payload)
+    
+    result = response['Body'].read()
+    
+    
+    return result
+
+*********************************
+
+scroll down
+see code tab, code source, lambda function tab
+go and paste the file above
+
+see configuration tab next to code tab
+go and click it
+see environment variables on the left pane
+go and click it
+
+click edit
+new window comes
+click "add environment variable"
+go and copy your endpoint name from SM console endpoints
+paste it in the value box
+write "ENDPOINT_NAME" FOR THE KEY BOX
+
+go and copy your endpoint name from SM console endpoints
+paste it in the value box
+
+click SAVE
+see the variable created
+
+go to code tab back
+click deploy button next to test (to save your settings)
+see the success message
+
+near test button click the triangle
+select configure test event
+scroll down
+see EVENT JSON
+Paste the below file
+**************************
+{
+  "data": "0.0,0.0,2.0,141.0,80000.0"
+}
+**************************
+scroll up to event name
+write "autoscouttest"
+scroll down and save
+
+go and click the TEST button
+see the execution results tab next to lambda function tab
+see the result in response
+see the log in function logs
+
+------------------------------------------------------------
+
+CREATE API Gateway
+
+search api in the console
+right click and open in new tab
+
+hit the Create API icon
+choose api type REST API
+click build
+
+# pop up window comes
+# click ok
+#     IF you have created api before:
+#    (Go and  click create API
+#     go to the REST API  (and not HTTP API, not private one)
+#     click BUILD)
+
+rest and New API is selected by default
+select New API (if it isn't selected by default)
+
+write name "api-your -name"
+go and click CREATE API
+
+under actions button select "create method"
+select post 
+click checkmark
+select lambda function (type "lambda" in Lambda Function space then select the proper one)
+select "lambda-your-name"
+go and click save
+pop up window comes
+click ok
+go and click on test
+scroll down
+paste the file below 
+
+{
+  "data": "0.0,0.0,2.0,141.0,80000.0"
+}
+
+
+click test
+see the result status code 200
+
+from actions go and select "deploy api"
+deployment stage select new stage
+write stage name "beta"
+go and click deploy
+copy invoke url
+
+go to rester in google chrome
+select post as method
+paste url
+select body tab
+select json by clicking three dots on right up corner
+paste the json below
+
+{
+  "data": "0.0,0.0,2.0,141.0,80000.0"
+}
+
+
+GO AND SEND THE REQUEST
+SEE the result
+
+
+DEPLOY THE MODEL WİTH STREAMLIT
+create a streamlit folder on your desktop
+    - create app.py
+    - paste your transformer pickle file in the folder
+
+paste file below in app.py
+
+from textwrap import fill
+import pickle
+import requests
+import json
+import streamlit as st
+import pandas as pd
+from sklearn.compose import make_column_transformer
+from sklearn.preprocessing import OrdinalEncoder
+
+html_temp = """
+<div style="background-color:green;padding:10px">
+<h2 style="color:white;text-align:center;">Car Price Prediction </h2>
+</div>"""
+st.sidebar.markdown(html_temp,unsafe_allow_html=True)
+
+
+
+html_temp = """
+<div style="background-color:tomato;padding:10px">
+<h2 style="color:white;text-align:center;">Streamlit ML Cloud App </h2>
+</div>"""
+st.markdown(html_temp,unsafe_allow_html=True)
+
+
+age=st.sidebar.selectbox("What is the age of your car:",(0,1,2,3))
+hp=st.sidebar.slider("What is the hp_kw of your car?", 40, 300, step=5)
+km=st.sidebar.slider("What is the km of your car", 0,350000, step=1000)
+gearing_type=st.sidebar.radio('Select gear type',('Automatic','Manual','Semi-automatic'))
+car_model=st.sidebar.selectbox("Select model of your car", ('Audi A1', 'Audi A3', 'Opel Astra', 'Opel Corsa', 'Opel Insignia', 'Renault Clio', 'Renault Duster', 'Renault Espace'))
+
+
+
+richard_transformer = pickle.load(open('transformer', 'rb'))
+
+
+my_dict = {
+    "age": age,
+    "hp_kW": hp,
+    "km": km,
+    'Gearing_Type':gearing_type,
+    "make_model": car_model
+    
+}
+
+df = pd.DataFrame.from_dict([my_dict])
+
+
+st.header("The configuration of your car is below")
+st.table(df)
+
+df2 = richard_transformer.transform(df)
+df2 = pd.DataFrame(df2)
+df2.to_csv('df2.csv', index=False, header=False)
+with open('df2.csv', 'r') as f:
+    payload = f.read().strip('\n')
+
+url = 'https://h5qbgaovt5.execute-api.us-east-1.amazonaws.com/beta'
+
+st.subheader("Press predict if configuration is okay")
+
+ 
+# Single Observation
+event = {
+  "data": payload
+  
+}
+
+
+
+response = requests.post(url, data=json.dumps(event))
+result = response.json()
+
+if st.button("Predict"):
+    st.success("The estimated price of your car is €{} ".format(int(result)))
+    
+
+
+
+
+
+change url variable to your own url from API Gateway
+
+streamlit run app.py  using a terminal on streamlit folder
+
+send request and see results
+
+delete endpoint
+stop Notebook instance
+
+GOOD LUCK !!!!
+
+
+
+
+
+
+
