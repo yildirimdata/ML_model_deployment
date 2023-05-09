@@ -1,0 +1,349 @@
+create notebook instance
+New execution role
+select All S3
+open jupyter
+
+
+import libraries
+change bucket name to your own bucket name
+write-to_s3 uploads the files to s3
+check s3 
+Session provides credentials and region
+training
+get execution role 
+you may see under IAM roles
+sagemaker.image_uris.retrieve function bring us the xgboost
+
+
+build model:
+same as how you build in ml lessons
+selecting a model, defining hyperparameters
+additionally set instance type, count etc
+specify training location as data channels
+
+train the model:
+check training jobs 
+see RMSE for train, validation
+after complete
+check training jobs as completed
+see output file in S3
+model is ready to deploy
+
+deploy model:inference
+see model, endpoint configuration(created automatically)
+see enpoint creating and in service by refreshing
+
+run predictions
+serializers for data to be the same as model,
+-------------------------------------------------------------------------
+
+CREATE POLICY
+
+go to IAM service
+click policies 
+create Policy
+
+go to json tab
+paste the following json code
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "sagemaker:DescribeTrainingJob",
+                "sagemaker:DescribeLabelingJob",
+                "sagemaker:DescribeDataQualityJobDefinition",
+                "sagemaker:DescribeModelPackage",
+                "sagemaker:Search",
+                "sagemaker:DescribeModelPackageGroup",
+                "sagemaker:DescribeApp",
+                "sagemaker:GetRecord",
+                "sagemaker:DescribeFlowDefinition",
+                "sagemaker:DescribeAlgorithm",
+                "sagemaker:GetLineageGroupPolicy",
+                "sagemaker:DescribeTransformJob",
+                "sagemaker:DescribeInferenceRecommendationsJob",
+                "sagemaker:DescribeHumanLoop",
+                "sagemaker:BatchDescribeModelPackage",
+                "sagemaker:DescribeAction",
+                "sagemaker:DescribeDeviceFleet",
+                "sagemaker:DescribeSubscribedWorkteam",
+                "sagemaker:DescribeHyperParameterTuningJob",
+                "sagemaker:DescribeAutoMLJob",
+                "sagemaker:DescribeWorkforce",
+                "sagemaker:DescribeProcessingJob",
+                "sagemaker:GetDeviceFleetReport",
+                "sagemaker:DescribeEndpointConfig",
+                "sagemaker:DescribeStudioLifecycleConfig",
+                "sagemaker:RenderUiTemplate",
+                "sagemaker:DescribeImageVersion",
+                "sagemaker:BatchGetRecord",
+                "sagemaker:DescribeHumanTaskUi",
+                "sagemaker:GetDeviceRegistration",
+                "sagemaker:DescribeProject",
+                "sagemaker:GetSagemakerServicecatalogPortfolioStatus",
+                "sagemaker:DescribeNotebookInstance",
+                "sagemaker:DescribeAppImageConfig",
+                "sagemaker:DescribeLineageGroup",
+                "sagemaker:DescribeNotebookInstanceLifecycleConfig",
+                "sagemaker:DescribeTrial",
+                "sagemaker:DescribeContext",
+                "sagemaker:DescribeModelExplainabilityJobDefinition",
+                "sagemaker:DescribeEndpoint",
+                "sagemaker:DescribeUserProfile",
+                "sagemaker:InvokeEndpoint",
+                "sagemaker:DescribeMonitoringSchedule",
+                "sagemaker:DescribeEdgePackagingJob",
+                "sagemaker:DescribeFeatureGroup",
+                "sagemaker:DescribeModelQualityJobDefinition",
+                "sagemaker:GetModelPackageGroupPolicy",
+                "sagemaker:DescribeModel",
+                "sagemaker:DescribePipeline",
+                "sagemaker:DescribeArtifact",
+                "sagemaker:DescribePipelineExecution",
+                "sagemaker:DescribeWorkteam",
+                "sagemaker:DescribeModelBiasJobDefinition",
+                "sagemaker:DescribeCompilationJob",
+                "sagemaker:BatchGetMetrics",
+                "sagemaker:GetSearchSuggestions",
+                "sagemaker:DescribeExperiment",
+                "sagemaker:DescribeImage",
+                "sagemaker:DescribeDomain",
+                "sagemaker:DescribeCodeRepository",
+                "sagemaker:InvokeEndpointAsync",
+                "sagemaker:DescribePipelineDefinitionForExecution",
+                "sagemaker:DescribeTrialComponent",
+                "sagemaker:DescribeDevice"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+
+
+go to name by next
+write SageMakerInvokeEndPointx
+create policy
+
+
+-------------------------------------------------------------------------
+CREATE ROLE
+
+click ROLES
+
+click CREATE ROLE
+
+AWS SERVICE is selected as default
+under "use case" select LAMBDA
+click next
+
+See ADD PERMISSIONS
+search SageMakerInvokeEndPoint (hit enter)
+select, click checkbox
+clear search by clicking X
+search for AWSLambdaBasicExecutionRole   #maybe need to go to last page (page 9)
+select the one with orange box, click checkbox
+click NEXT
+write ROLE NAME "lambda-your-name-role"
+see permissions we assigned
+
+click  CREATE ROLE
+see role created
+
+-----------------------------------------------------------------
+
+CREATE LAMBDA FUNCTION
+
+write lambda in the search bar
+under SERVICES search LAMBDA
+select the star next to it
+left CLICK open link in new tab
+
+Click CREATE FUNCTION on upper-right
+
+WRITE function name  "lambda-your-name"
+Select Python for RUNTIME
+under PERMISSIONS 
+CLICK "Change default execution role"
+SELECT Use an existing role
+click the space opened
+SELECT lambda-your-name-role
+CLICK create function on bottom-right
+
+Copy notebook below
+***************************
+# Reference:
+# https://aws.amazon.com/blogs/machine-learning/call-an-amazon-sagemaker-model-endpoint-using-amazon-api-gateway-and-aws-lambda/
+# https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-output-format
+
+import boto3
+import math
+import dateutil
+import json
+import os
+
+
+# grab environment variables
+ENDPOINT_NAME = os.environ['ENDPOINT_NAME']
+runtime= boto3.client('runtime.sagemaker')
+
+
+
+def lambda_handler(event, context):
+    
+    
+    data = json.loads(json.dumps(event))
+    payload = data['data']
+    print(payload)
+    
+    response = runtime.invoke_endpoint(EndpointName=ENDPOINT_NAME,
+                                       ContentType='text/csv',
+                                       Body=payload)
+    
+    result = response['Body'].read()
+    
+    
+    return result
+
+*************************
+
+scroll down
+see code tab, code source, lambda function tab
+go and paste the file above
+
+see configuration tab next to code tab
+go and click it
+see environment variables on the left pane
+go and click
+
+click edit
+new window comes
+click "add environment variable"
+write "ENDPOINT_NAME" FOR THE KEY BOX
+
+go and copy your endpoint name from SM console endpoints
+paste it in the value box
+
+click SAVE
+see the variable created
+
+go to code tab back
+click deploy button next to test (to save your settings)
+see the success message
+
+near test button click the triangle
+select configure test event
+scroll down
+see EVENT JSON
+Paste the below file
+**************************
+{
+  "data": "4,109,64,44,99,34.8,0.905,26"
+}
+***************************
+scroll up to event name
+write "diabetestest"
+scroll down and save
+
+go and click the TEST button
+see the execution results tab next to lambda function tab
+see the result in response
+see the log in function logs
+
+-------------------------------------------
+
+CREATE API Gateway
+
+search api in the console
+rigt click and open in new tab
+
+hit the Create API icon
+choose api type REST API
+click build
+    
+rest and New API is selected by default
+select New API (if it isn't selected by default)
+
+write name "api-your-name"
+go and click CREATE API
+
+under actions button select "create method"
+select post 
+click checkmark
+select lambda function (type "lambda" in Lambda Function space then select the proper one)
+select "lambda-your-name"
+go and click save
+pop up window comes
+click ok
+go and click on test
+scroll down
+paste the file below 
+
+{
+  "data": "4,109,64,44,99,34.8,0.905,26"
+}
+
+
+click test
+see the result status code 200
+
+from actions go and select "deploy api"
+deployment stage select new stage
+write stage name "beta"
+go and click deploy
+copy invoke url
+
+--------------------------------------------
+DEPLOY USING RESTer
+
+go to rester in google chrome
+select post as method
+paste url
+select body tab
+select json by clicking three dots on right up corner
+paste the json below
+
+{
+  "data": "4,109,64,44,99,34.8,0.905,26"
+}
+
+GO AND SEND THE REQUEST
+SEE the result
+
+
+delete endpoint
+stop Notebook instance
+
+GOOD LUCK !!!!
+
+---------------------------------------
+
+DEPLOY WITH STREAMLIT
+
+
+open diabetes_app.py file with VS Code, and paste url in this file
+open git bash on the folder contains diabetes_app.py file
+if you have an environment, activate it and then run the following code
+
+   streamlit run diabetes_app.py
+
+if you don't have an  environment, create and activate it before using the following  codes respectively:
+
+   python3 -m venv env_name
+   source env_name/bin/activate
+
+install the necessary libraries then run the diabetes_app.py file with streamlit 
+
+
+
+
+
+
+
+
+
+
+
